@@ -12,10 +12,6 @@ app.use(cors());
 const TMDB_API_KEY = process.env.TMDB_API_KEY;
 const TMDB_BASE_URL = 'https://api.themoviedb.org/3';
 
-// This line is useful for basic serving but not strictly needed
-// if you run the frontend on a separate server like http-server.
-app.use(express.static('../frontend'));
-
 // API endpoint to get popular movies
 app.get('/api/movies/popular', async (req, res) => {
     try {
@@ -54,7 +50,7 @@ app.get('/api/movies/search', async (req, res) => {
 });
 
 // ==========================================================
-// == NEW ENDPOINT TO GET A MOVIE'S TRAILER ==
+// ==  UPDATED ENDPOINT WITH FALLBACK LOGIC  ==
 // ==========================================================
 app.get('/api/movie/:id/trailer', async (req, res) => {
     try {
@@ -66,25 +62,31 @@ app.get('/api/movie/:id/trailer', async (req, res) => {
         });
 
         const videos = response.data.results;
-        // Find the official trailer from the list of videos first
+
+        // 1. First, try to find an official "Trailer" on YouTube
         const trailer = videos.find(video => video.type === 'Trailer' && video.site === 'YouTube');
 
         if (trailer) {
             res.json({ key: trailer.key });
-        } else {
-            // If no official trailer, find any available YouTube video as a fallback
-            const fallbackVideo = videos.find(video => video.site === 'YouTube');
-            if (fallbackVideo) {
-                res.json({ key: fallbackVideo.key });
-            } else {
-                res.status(404).json({ message: 'No trailer found' });
-            }
+            return; // Exit after finding the best match
         }
+
+        // 2. If no official trailer, find the first available video on YouTube (e.g., a teaser or clip)
+        const fallbackVideo = videos.find(video => video.site === 'YouTube');
+        
+        if (fallbackVideo) {
+            res.json({ key: fallbackVideo.key });
+        } else {
+            // 3. If no YouTube video is found at all
+            res.status(404).json({ message: 'No trailer found' });
+        }
+
     } catch (error) {
         console.error('Error fetching movie trailer:', error.message);
         res.status(500).json({ message: 'Error fetching movie trailer' });
     }
 });
+
 
 app.listen(PORT, () => {
     console.log(`Server is running on http://localhost:${PORT}`);
