@@ -1,5 +1,4 @@
 // script.js - FULL UPDATED CODE
-
 const movieContainer = document.getElementById('movie-container');
 const searchForm = document.getElementById('search-form');
 const searchInput = document.getElementById('search-input');
@@ -10,17 +9,13 @@ const videoContainer = document.getElementById('video-container');
 const API_BASE_URL = 'http://localhost:3000/api';
 const IMAGE_BASE_URL = 'https://image.tmdb.org/t/p/w500';
 
-// ---- DISPLAY MOVIES ----
 function displayMovies(movies) {
     movieContainer.innerHTML = '';
     movies.forEach(movie => {
         if (movie.poster_path) {
             const movieCard = document.createElement('div');
             movieCard.classList.add('movie-card');
-            
-            // Add movie ID as a data attribute
-            movieCard.dataset.movieId = movie.id; 
-
+            movieCard.dataset.movieId = movie.id;
             movieCard.innerHTML = `
                 <img src="${IMAGE_BASE_URL}${movie.poster_path}" alt="${movie.title}">
                 <h3>${movie.title}</h3>
@@ -30,7 +25,6 @@ function displayMovies(movies) {
     });
 }
 
-// ---- FETCH MOVIES ----
 async function getPopularMovies() {
     try {
         const response = await fetch(`${API_BASE_URL}/movies/popular`);
@@ -51,43 +45,46 @@ async function searchMovies(query) {
     }
 }
 
-// ---- TRAILER LOGIC ----
+// ===============================================
+// == UPDATED playTrailer FUNCTION ==
+// ===============================================
 async function playTrailer(movieId) {
     try {
         const response = await fetch(`${API_BASE_URL}/movie/${movieId}/trailer`);
+        
+        // If the response is not OK (e.g., 404 Not Found)
         if (!response.ok) {
-            alert('Trailer not found!');
-            return;
+            videoContainer.innerHTML = `<div class="trailer-not-found">Trailer not available for this movie.</div>`;
+        } else {
+            const data = await response.json();
+            const trailerKey = data.key;
+            // Create YouTube iframe if a key is found
+            videoContainer.innerHTML = `
+                <iframe 
+                    src="https://www.youtube.com/embed/${trailerKey}?autoplay=1&rel=0" 
+                    frameborder="0" 
+                    allow="autoplay; encrypted-media" 
+                    allowfullscreen>
+                </iframe>
+            `;
         }
-        const data = await response.json();
-        const trailerKey = data.key;
 
-        // Create YouTube iframe
-        videoContainer.innerHTML = `
-            <iframe 
-                src="https://www.youtube.com/embed/${trailerKey}?autoplay=1" 
-                frameborder="0" 
-                allow="autoplay; encrypted-media" 
-                allowfullscreen>
-            </iframe>
-        `;
-
-        // Show the modal
+        // Show the modal regardless of whether a trailer was found
         modal.classList.remove('hidden');
 
     } catch (error) {
         console.error('Error playing trailer:', error);
-        alert('Could not load trailer.');
+        // Display a generic error message in the modal
+        videoContainer.innerHTML = `<div class="trailer-not-found">Could not load trailer due to an error.</div>`;
+        modal.classList.remove('hidden');
     }
 }
 
 function closeModal() {
     modal.classList.add('hidden');
-    // Stop the video by clearing the iframe content
-    videoContainer.innerHTML = '';
+    videoContainer.innerHTML = ''; // Clear the video/message
 }
 
-// ---- EVENT LISTENERS ----
 searchForm.addEventListener('submit', (e) => {
     e.preventDefault();
     const searchTerm = searchInput.value.trim();
@@ -98,7 +95,6 @@ searchForm.addEventListener('submit', (e) => {
     }
 });
 
-// Event listener for clicking on a movie card
 movieContainer.addEventListener('click', (e) => {
     const card = e.target.closest('.movie-card');
     if (card) {
@@ -107,14 +103,11 @@ movieContainer.addEventListener('click', (e) => {
     }
 });
 
-// Event listeners for closing the modal
 closeButton.addEventListener('click', closeModal);
 modal.addEventListener('click', (e) => {
-    // Close modal if the dark overlay is clicked, but not the content inside
     if (e.target === modal) {
         closeModal();
     }
 });
 
-// Initial load
 getPopularMovies();
