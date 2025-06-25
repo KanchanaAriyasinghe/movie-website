@@ -2,7 +2,7 @@ Movie Finder Website
     A simple and elegant web application for discovering movies. This project uses a Node.js backend to securely interact with The Movie Database (TMDB) API and a clean frontend built with HTML, CSS, and vanilla JavaScript to display the data.
 
 Screenshot
-(You can replace the link above with a real screenshot of your running application!)
+![alt text](image.png)
 
 Features
     Displays Popular Movies: On page load, the site automatically fetches and displays the most popular movies.
