@@ -6,6 +6,7 @@
     <title>Movie Finder</title>
     <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
     <header>
         <nav>
@@ -20,6 +21,19 @@
     <main id="movie-container">
         <!-- Movie cards will be inserted here by JavaScript -->
     </main>
+
+    <!-- ============================================= -->
+    <!-- == NEW: Trailer Modal Structure Added Here == -->
+    <!-- ============================================= -->
+    <div id="trailer-modal" class="modal hidden">
+        <div class="modal-content">
+            <span id="close-button">&times;</span>
+            <div id="video-container">
+                <!-- The YouTube Iframe will be injected here by JavaScript -->
+            </div>
+        </div>
+    </div>
+
 
     <script src="script.js"></script>
 </body>

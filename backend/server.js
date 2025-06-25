@@ -2,18 +2,18 @@
 const express = require('express');
 const axios = require('axios');
 require('dotenv').config();
-const cors = require('cors'); // <-- ADD THIS LINE
+const cors = require('cors');
 
 const app = express();
 const PORT = 3000;
 
-app.use(cors()); // <-- AND ADD THIS LINE to enable CORS for all requests
+app.use(cors());
 
 const TMDB_API_KEY = process.env.TMDB_API_KEY;
 const TMDB_BASE_URL = 'https://api.themoviedb.org/3';
 
-// This line is no longer necessary if you are running the frontend
-// on a separate server (like http-server), but it doesn't hurt to keep.
+// This line is useful for basic serving but not strictly needed
+// if you run the frontend on a separate server like http-server.
 app.use(express.static('../frontend'));
 
 // API endpoint to get popular movies
@@ -28,7 +28,7 @@ app.get('/api/movies/popular', async (req, res) => {
         });
         res.json(response.data);
     } catch (error) {
-        console.error('Error fetching popular movies:', error.message); // Added better logging
+        console.error('Error fetching popular movies:', error.message);
         res.status(500).json({ message: 'Error fetching popular movies' });
     }
 });
@@ -48,8 +48,41 @@ app.get('/api/movies/search', async (req, res) => {
         });
         res.json(response.data);
     } catch (error) {
-        console.error('Error searching for movies:', error.message); // Added better logging
+        console.error('Error searching for movies:', error.message);
         res.status(500).json({ message: 'Error searching for movies' });
+    }
+});
+
+// ==========================================================
+// == NEW ENDPOINT TO GET A MOVIE'S TRAILER ==
+// ==========================================================
+app.get('/api/movie/:id/trailer', async (req, res) => {
+    try {
+        const movieId = req.params.id;
+        const response = await axios.get(`${TMDB_BASE_URL}/movie/${movieId}/videos`, {
+            params: {
+                api_key: TMDB_API_KEY
+            }
+        });
+
+        const videos = response.data.results;
+        // Find the official trailer from the list of videos first
+        const trailer = videos.find(video => video.type === 'Trailer' && video.site === 'YouTube');
+
+        if (trailer) {
+            res.json({ key: trailer.key });
+        } else {
+            // If no official trailer, find any available YouTube video as a fallback
+            const fallbackVideo = videos.find(video => video.site === 'YouTube');
+            if (fallbackVideo) {
+                res.json({ key: fallbackVideo.key });
+            } else {
+                res.status(404).json({ message: 'No trailer found' });
+            }
+        }
+    } catch (error) {
+        console.error('Error fetching movie trailer:', error.message);
+        res.status(500).json({ message: 'Error fetching movie trailer' });
     }
 });
 
